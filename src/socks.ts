@@ -5,7 +5,7 @@ type Component = {
 
 (function () {
   // const base = 'http://localhost:5173/src/components/' // For local development
-  const base = 'https://unpkg.com/socks-ui@0.1.0/dist/' // For production
+  const base = 'https://unpkg.com/socks-ui@latest/dist/' // For production
   // const extension = '.ts' // For local development
   const extension = '.js' // For production
 
