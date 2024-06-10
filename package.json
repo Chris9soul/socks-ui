@@ -1,8 +1,12 @@
 {
   "name": "socks-ui",
-  "private": true,
-  "version": "0.0.1",
-  "type": "module",
+  "description": "A simple UI library that turns your divs into accessible components, powered by GSAP",
+  "private": "true",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/socks.js",
+  "homepage": "https://github.com/Chris9soul/socks-ui",
+  "author": "Christos Soulaki",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
