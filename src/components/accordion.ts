@@ -60,12 +60,12 @@
     const accordions = group.querySelectorAll(`[${ACCORDION_ROOT}]`) as NodeListOf<HTMLElement>
     // check for accordion elements
     if (accordions.length === 0) {
-      console.error(`Socks UI: Could not find accordions in accordion group ${groupIndex + 1}. Make sure to add the [s-accordion="element"] attribute to your accordions.`)
+      console.error(`Socks UI: Could not find accordions in accordion group ${groupIndex + 1}. Make sure to add the [s-accordion="root"] attribute to your accordions.`)
       return
     }
     // check if there are no missing accordion elements attributes
     if (accordions.length < group.querySelectorAll(`[${ACCORDION_CONTENT}]`).length) {
-      console.error(`Socks UI: Some accordions are missing the [s-accordion="element"] attribute in group ${groupIndex + 1}.`)
+      console.error(`Socks UI: Some accordions are missing the [s-accordion="root"] attribute in group ${groupIndex + 1}.`)
     }
 
     accordions.forEach((accordion, index) => {
