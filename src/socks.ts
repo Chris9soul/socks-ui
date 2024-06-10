@@ -3,12 +3,11 @@ type Component = {
   fileName: string
 }
 
-
 (function () {
-  const base = 'http://localhost:5173/src/components/' // For local development
-  // const base = 'https://cdn.jsdelivr.net/gh/Chris9soul/socks-ui/components/' // For production
-  const extension = '.ts' // For local development
-  // const extension = '.min.js' // For production
+  // const base = 'http://localhost:5173/src/components/' // For local development
+  const base = 'https://unpkg.com/socks-ui@0.1.0/dist/' // For production
+  // const extension = '.ts' // For local development
+  const extension = '.js' // For production
 
   const components: Component[] = [
     {
@@ -30,9 +29,8 @@ type Component = {
 
   // Check for components in the DOM 
   components.forEach(component => {
-    if (document.querySelector(`[${component.attr}]`)) {
-      loadComponent(component)
-    }
+    if (!document.querySelector(`[${component.attr}]`)) return
+    loadComponent(component)
   })
 
 })()
