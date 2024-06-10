@@ -1,7 +1,7 @@
 {
   "name": "socks-ui",
   "description": "A simple UI library that turns your divs into accessible components, powered by GSAP",
-  "private": "true",
+  "private": false,
   "version": "0.1.0",
   "license": "MIT",
   "main": "dist/socks.js",
