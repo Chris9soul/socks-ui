@@ -4,10 +4,14 @@ type Component = {
 }
 
 (function () {
-  // const base = 'http://localhost:5173/src/components/' // For local development
-  const base = 'https://unpkg.com/socks-ui@latest/dist/' // For production
-  // const extension = '.ts' // For local development
-  const extension = '.js' // For production
+  // 
+  let base = 'https://unpkg.com/socks-ui@latest/dist/' // For production
+  let extension = '.js' // For production
+  if (window.location.hostname === 'localhost') {
+    base = 'http://localhost:5173/src/components/' // For local development
+    extension = '.ts' // For local development
+  }
+
 
   const components: Component[] = [
     {

@@ -33,7 +33,7 @@
     <meta content="width=device-width, initial-scale=1" name="viewport" />
     <meta content="Webflow" name="generator" />
     <link
-      href="https://assets-global.website-files.com/6609d4a65e9084457b3dee6e/css/socks-ui.webflow.c08d83c8a.css"
+      href="https://cdn.prod.website-files.com/6609d4a65e9084457b3dee6e/css/socks-ui.webflow.946dc7d16.css"
       rel="stylesheet"
       type="text/css"
     />
@@ -565,55 +565,53 @@
         </section>
       </div>
       <!-- Modal element -->
-      <div s-modal="wrapper" id="modal1">
-        <style>
-          [s-modal='wrapper'] {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            overflow: auto;
-            justify-content: center;
-            align-items: center;
-          }
+      <div
+        id="modal1"
+        class="modal-wrapper"
+        s-modal="wrapper"
+        style="overflow: hidden; display: flex"
+      >
+        <div class="modal-overlay" s-modal="overlay" style="opacity: 0.9"></div>
 
-          [s-modal='element'] {
-            position: relative;
-            background-color: var(--colors--surface);
-            padding: 20px;
-            border: 1px solid var(--colors--stroke);
-            width: 80%;
-            max-width: 600px;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-            z-index: 1;
-          }
-
-          [s-modal='overlay'] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 0;
-          }
-        </style>
-        <div s-modal="root">
-          <div style="height: 120vh" class="title-wrapper">
-            <h2 class="h5" s-modal="title">Modal content</h2>
-          </div>
-          <p>This is the modal content</p>
+        <div
+          class="modal"
+          s-modal="root"
+          role="dialog"
+          aria-modal="true"
+          aria-hidden="false"
+          tabindex="-1"
+          aria-labelledby="modal1-title"
+          style="
+            max-height: 90vh;
+            overflow-y: auto;
+            translate: none;
+            rotate: none;
+            scale: none;
+            opacity: 1;
+            transform: translate(0px, 0px);
+          "
+        >
+          <h2
+            style="margin-top: 0"
+            class="h4"
+            s-modal="title"
+            id="modal1-title"
+          >
+            Modal title
+          </h2>
+          <p>This is a simple modal. You can even use a form here</p>
           <div class="cta-wrapper">
-            <button class="button cc-outline" s-modal="close">
+            <button
+              class="button cc-outline"
+              s-modal="close"
+              aria-label="Close modal"
+              aria-controls="modal1"
+              aria-expanded="true"
+            >
               Close modal
             </button>
           </div>
         </div>
-        <div s-modal="overlay"></div>
       </div>
     </div>
 

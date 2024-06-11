@@ -34,24 +34,26 @@
     return
   }
 
+  let accordionMethods: { [key: string]: { open: () => void, close: () => void } } = {}
+
   accordionGroups.forEach((group, groupIndex) => {
     const activeClass = group.getAttribute(ACTIVE_CLASS_ATTRIBUTE) || DEFAULT_OPEN_CLASS
     const isMultiple = group.hasAttribute(MULTIPLE_ATTRIBUTE)
-    let timelines: gsap.core.Timeline[] = []
+
     // set easing and duration
     const ease = group.getAttribute(EASE_ATTRIBUTE) || DEFAULT_EASE
     let duration = DEFAULT_DURATION
 
     // check if ease is valid
     if (!gsap.parseEase(ease)) {
-      console.error(`Socks UI: Invalid ease value in accordion group ${groupIndex + 1}. Please provide a valid GSAP ease value.`)
+      console.error(`Socks UI: Invalid ease value in accordion group ${groupIndex}. Please provide a valid GSAP ease value.`)
       return
     }
     // check if duration is valid
     if (group.hasAttribute(DURATION_ATTRIBUTE)) {
       const setDuration = parseFloat(group.getAttribute(DURATION_ATTRIBUTE)!)
       if (isNaN(setDuration)) {
-        console.error(`Socks UI: Invalid duration value in accordion group ${groupIndex + 1}. Please provide a valid number.`)
+        console.error(`Socks UI: Invalid duration value in accordion group ${groupIndex}. Please provide a valid number.`)
         return
       }
       duration = setDuration
@@ -60,12 +62,12 @@
     const accordions = group.querySelectorAll(`[${ACCORDION_ROOT}]`) as NodeListOf<HTMLElement>
     // check for accordion elements
     if (accordions.length === 0) {
-      console.error(`Socks UI: Could not find accordions in accordion group ${groupIndex + 1}. Make sure to add the [s-accordion="root"] attribute to your accordions.`)
+      console.error(`Socks UI: Could not find accordions in accordion group ${groupIndex}. Make sure to add the [s-accordion="root"] attribute to your accordions.`)
       return
     }
     // check if there are no missing accordion elements attributes
     if (accordions.length < group.querySelectorAll(`[${ACCORDION_CONTENT}]`).length) {
-      console.error(`Socks UI: Some accordions are missing the [s-accordion="root"] attribute in group ${groupIndex + 1}.`)
+      console.error(`Socks UI: Some accordions are missing the [s-accordion="root"] attribute in group ${groupIndex}.`)
     }
 
     accordions.forEach((accordion, index) => {
@@ -73,28 +75,32 @@
       const content = accordion.querySelector(`[${ACCORDION_CONTENT}]`) as HTMLElement
       const activeElements = accordion.querySelectorAll(`[${ADD_ACTIVE_CLASS_ATTRIBUTE}]`)
 
+
       // check for content and trigger elements
       if (!content || !trigger) {
-        console.error(`Socks UI: Accordions must have a trigger and content element. Accordion ${index + 1} in group ${groupIndex + 1} is missing one of these elements.`)
+        console.error(`Socks UI: Accordions must have a trigger and content element. Accordion ${index} in group ${groupIndex} is missing one of these elements.`)
         return
       }
 
       /**
        * Set attributes and styles
        */
+      // if there is no ID, generate one
+      if (!accordion.id) { accordion.id = `accordion-${groupIndex}-${index}` }
       // trigger attributes
       trigger.style.cursor = 'pointer'
       if (trigger.tagName !== 'BUTTON') {
-        trigger.setAttribute('role', 'button')
-        trigger.setAttribute('tabindex', '0')
+        trigger.role = 'button'
+        trigger.tabIndex = 0
       }
-      trigger.setAttribute('id', `accordion-trigger-${groupIndex}-${index}`)
-      trigger.setAttribute('aria-expanded', 'false')
+      trigger.id = `accordion-trigger-${groupIndex}-${index}`
+      trigger.ariaExpanded = 'false'
       trigger.setAttribute('aria-controls', `accordion-content-${groupIndex}-${index}`)
+
       // content attributes
       content.setAttribute('aria-hidden', 'true')
-      content.setAttribute('role', 'region')
-      content.setAttribute('id', `accordion-content-${groupIndex}-${index}`)
+      content.role = 'region'
+      content.id = `accordion-content-${groupIndex}-${index}`
       content.setAttribute('aria-labelledby', `accordion-trigger-${groupIndex}-${index}`)
 
       gsap.set(content, { display: 'none' })
@@ -110,17 +116,51 @@
         ease,
       })
 
-      // add timeline to timelines array
-      timelines.push(tl)
+      accordionMethods[accordion.id] = {
+        open: () => {
+          if (accordion.classList.contains(activeClass)) return
+          // Open accordion
+          tl.play()
+          accordion.classList.add(activeClass)
+          activeElements.forEach(element => element.classList.add(activeClass))
+          // set attributes
+          trigger.setAttribute('aria-expanded', 'true')
+          content.setAttribute('aria-hidden', 'false')
+
+          // dispatch open event
+          const toggleEvent = new CustomEvent('accordion-open', { detail: accordion })
+          window.dispatchEvent(toggleEvent)
+
+          // close other accordions if multiple is false
+          if (isMultiple) return
+          accordions.forEach((acc, accIndex) => {
+            if (accIndex === index || !acc.classList.contains(activeClass)) return
+            // const trigger = acc.querySelector(`[${ACCORDION_TRIGGER}]`) as HTMLElement
+            // trigger.click()
+            accordionMethods[acc.id].close()
+          })
+        },
+        close: () => {
+          if (!accordion.classList.contains(activeClass)) return
+          // Close accordion
+          tl.reverse()
+          accordion.classList.remove(activeClass)
+          activeElements.forEach(element => element.classList.remove(activeClass))
+
+          // set attributes
+          trigger.setAttribute('aria-expanded', 'false')
+          content.setAttribute('aria-hidden', 'true')
+
+          // dispatch close event
+          const toggleEvent = new CustomEvent('accordion-close', { detail: accordion })
+          window.dispatchEvent(toggleEvent)
+        }
+      }
 
       // If first open attribute is present, or open attribute is present, open the accordion
       if (group.hasAttribute(FIRST_OPEN_ATTRIBUTE) && index === 0 || accordion.classList.contains(activeClass)) {
-        tl.progress(1).pause()
-        accordion.classList.add(activeClass)
-        activeElements.forEach(element => element.classList.add(activeClass))
-        // set attributes
-        trigger.setAttribute('aria-expanded', 'true')
-        content.setAttribute('aria-hidden', 'false')
+        accordionMethods[accordion.id].open()
+        // tl.progress(1).pause()
       }
 
       // trigger on click or enter/space key
@@ -133,46 +173,19 @@
       })
 
       function toggleAccordion() {
-        // if "multiple" is false & it's already open & we started with one open, don't close it
-        if (!isMultiple && accordion.classList.contains(activeClass) && group.hasAttribute(FIRST_OPEN_ATTRIBUTE)) return
-
         //toggle timeline and open attribute
         if (accordion.classList.contains(activeClass)) {
           // Close accordion
-          tl.reverse()
-          accordion.classList.remove(activeClass)
-          activeElements.forEach(element => element.classList.remove(activeClass))
-          // set attributes
-          trigger.setAttribute('aria-expanded', 'false')
-          content.setAttribute('aria-hidden', 'true')
-
-          // dispatch close event
-          const toggleEvent = new CustomEvent('accordion-close', { detail: accordion })
-          window.dispatchEvent(toggleEvent)
+          if (group.hasAttribute(FIRST_OPEN_ATTRIBUTE)) return
+          accordionMethods[accordion.id].close()
         } else {
           // Open accordion
-          tl.play()
-          accordion.classList.add(activeClass)
-          activeElements.forEach(element => element.classList.add(activeClass))
-          // set attributes
-          trigger.setAttribute('aria-expanded', 'true')
-          content.setAttribute('aria-hidden', 'false')
-
-          // dispatch open event
-          const toggleEvent = new CustomEvent('accordion-open', { detail: accordion })
-          window.dispatchEvent(toggleEvent)
+          accordionMethods[accordion.id].open()
         }
-        // check if multiple accordions can be open at the same time
-        if (isMultiple) return
-        // otherwise, close all other accordions
-        timelines.forEach((timeline, timelineIndex) => {
-          if (timelineIndex !== index && !timeline.reversed()) {
-            timeline.reverse()
-            accordions[timelineIndex].classList.remove(activeClass)
-            accordions[timelineIndex].querySelectorAll(`[${ADD_ACTIVE_CLASS_ATTRIBUTE}]`).forEach(element => element.classList.remove(activeClass))
-          }
-        })
       }
     })
   })
+
+  // store accordion methods
+  window.socks = { ...window.socks, accordion: accordionMethods }
 })()

@@ -31,21 +31,6 @@
 
   let modalMethods: { [key: string]: { open: () => void, close: () => void } } = {}
 
-  const openById = (id: string) => {
-    if (modalMethods[id]) {
-      modalMethods[id].open()
-    } else {
-      console.error(`Socks UI: Couldn't find a modal with the ID "${id}".`)
-    }
-  }
-  const closeById = (id: string) => {
-    if (modalMethods[id]) {
-      modalMethods[id].close()
-    } else {
-      console.error(`Socks UI: Couldn't find a modal with the ID "${id}".`)
-    }
-  }
-
   modals.forEach((modal, index) => {
     // get modal's ID
     const modalID = modal.getAttribute('id')
@@ -158,10 +143,7 @@
     }
 
     // store modal methods
-    modalMethods = {
-      ...modalMethods,
-      [modalID]: { open: openModal, close: closeModal }
-    }
+    modalMethods[modalID] = { open: openModal, close: closeModal }
 
     const focusableElements = modal.querySelectorAll('a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])')
     const firstFocusableElement = focusableElements[0] as HTMLElement
@@ -214,5 +196,5 @@
   }) // end of modals loop
 
   // Add modal methods to the global scope
-  window.socks = { ...window.socks, openModal: openById, closeModal: closeById }
+  window.socks = { ...window.socks, modal: modalMethods }
 })()
