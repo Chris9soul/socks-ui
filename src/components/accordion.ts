@@ -12,8 +12,8 @@
   // Main Attributes
   const ACCORDION_GROUP = 's-accordion="group"'
   const ACCORDION_ROOT = 's-accordion="root"'
-  const ACCORDION_CONTENT = 's-accordion="content"'
   const ACCORDION_TRIGGER = 's-accordion="trigger"'
+  const ACCORDION_CONTENT = 's-accordion="content"'
   const DEFAULT_EASE = 'power3.inOut'
   const DEFAULT_DURATION = 0.5
   const DEFAULT_OPEN_CLASS = 's-active' // Default class that will be added to open accordions
@@ -127,6 +127,7 @@
       trigger.addEventListener('click', toggleAccordion)
       trigger.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault() // prevent space from scrolling the page
           toggleAccordion()
         }
       })

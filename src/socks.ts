@@ -32,5 +32,4 @@ type Component = {
     if (!document.querySelector(`[${component.attr}]`)) return
     loadComponent(component)
   })
-
 })()
