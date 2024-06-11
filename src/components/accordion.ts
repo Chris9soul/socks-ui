@@ -142,6 +142,9 @@
           tl.reverse()
           accordion.classList.remove(activeClass)
           activeElements.forEach(element => element.classList.remove(activeClass))
+          // set attributes
+          trigger.setAttribute('aria-expanded', 'false')
+          content.setAttribute('aria-hidden', 'true')
 
           // dispatch close event
           const toggleEvent = new CustomEvent('accordion-close', { detail: accordion })
@@ -151,6 +154,9 @@
           tl.play()
           accordion.classList.add(activeClass)
           activeElements.forEach(element => element.classList.add(activeClass))
+          // set attributes
+          trigger.setAttribute('aria-expanded', 'true')
+          content.setAttribute('aria-hidden', 'false')
 
           // dispatch open event
           const toggleEvent = new CustomEvent('accordion-open', { detail: accordion })
@@ -163,6 +169,7 @@
           if (timelineIndex !== index && !timeline.reversed()) {
             timeline.reverse()
             accordions[timelineIndex].classList.remove(activeClass)
+            accordions[timelineIndex].querySelectorAll(`[${ADD_ACTIVE_CLASS_ATTRIBUTE}]`).forEach(element => element.classList.remove(activeClass))
           }
         })
       }
