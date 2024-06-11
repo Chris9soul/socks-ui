@@ -196,5 +196,5 @@
   }) // end of modals loop
 
   // Add modal methods to the global scope
-  window.socks = { ...window.socks, modal: modalMethods }
+  window.socks = { ...window.socks, modals: modalMethods }
 })()

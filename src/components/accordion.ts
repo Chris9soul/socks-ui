@@ -187,5 +187,5 @@
   })
 
   // store accordion methods
-  window.socks = { ...window.socks, accordion: accordionMethods }
+  window.socks = { ...window.socks, accordions: accordionMethods }
 })()
