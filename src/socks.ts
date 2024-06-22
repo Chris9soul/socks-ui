@@ -1,39 +1,24 @@
-type Component = {
-  attr: string
-  fileName: string
-}
-
 (function () {
-  // 
-  let base = 'https://unpkg.com/socks-ui@latest/dist/' // For production
-  let extension = '.js' // For production
-  if (window.location.hostname === 'localhost') {
-    base = 'http://localhost:5173/src/components/' // For local development
-    extension = '.ts' // For local development
-  }
+  // the base is the same as current script, except for the file name
+  // @ts-ignore // typescript doesn't know about document.currentScript
+  const base: string = document.currentScript.src
 
+  const components = ["s-accordion", "s-modal"]
 
-  const components: Component[] = [
-    {
-      attr: "s-accordion",
-      fileName: "accordion"
-    },
-    {
-      attr: "s-modal",
-      fileName: "modal"
-    }
-  ]
-
-  function loadComponent(component: Component) {
+  function loadComponent(attribute: string) {
+    const component = attribute.split('-')[1]
     const script = document.createElement('script')
-    script.src = base + component.fileName + extension
+    // if it ends with .ts, replace it with components/socks.ts
+    const replaceWith = base.endsWith('.ts') ? `components/${component}` : `${component}`
+
+    script.src = base.replace('socks', replaceWith)
     script.async = true
     document.head.appendChild(script)
   }
 
   // Check for components in the DOM 
-  components.forEach(component => {
-    if (!document.querySelector(`[${component.attr}]`)) return
-    loadComponent(component)
+  components.forEach(attribute => {
+    if (!document.querySelector(`[${attribute}]`)) return
+    loadComponent(attribute)
   })
 })()
