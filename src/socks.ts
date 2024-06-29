@@ -11,7 +11,8 @@
     // if it ends with .ts, replace it with components/socks.ts
     const replaceWith = base.endsWith('.ts') ? `components/${component}.ts` : `${component}.js`
 
-    script.src = base.replace('socks.js', replaceWith)
+    // replace the last part with the component
+    script.src = base.replace(/[^/]*$/, replaceWith)
     script.async = true
     document.head.appendChild(script)
   }
