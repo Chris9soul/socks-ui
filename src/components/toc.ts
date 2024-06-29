@@ -15,8 +15,13 @@
   const TOC_CONTENT = 's-toc="content"' // the content from which the titles will be extracted
   const TOC_TEXT = 's-toc="text"' // specify the text node in the template
 
+  // Defaults
+  const DEFAULT_ACTIVE = 's-active' // Default class that will be added to the active item
+
   // Options
-  const CUSTOM_SELECTOR = 's-toc-selector' // Custom selector for the headings
+  const TOC_CUSTOM_SELECTOR = 's-toc-selector' // Custom selector for the headings
+  const TOC_OFFSET = 's-toc-offset' // the offset from the top of the page
+  const TOC_ACTIVE = 's-toc-active' // the class to add to the active item
 
   let headingSelector = 'h2' // By default, look for h2 tags
   let subHeadingSelector = 'h3' // By default, look for h3 tags
@@ -32,7 +37,7 @@
     return
   }
   // Check for custom heading selector
-  const customSelectors = list.getAttribute(CUSTOM_SELECTOR)?.split(',') || []
+  const customSelectors = list.getAttribute(TOC_CUSTOM_SELECTOR)?.split(',') || []
   // check if the custom selector is valid
   if (customSelectors?.length > 0) {
     headingSelector = customSelectors[0]
@@ -65,6 +70,24 @@
     console.error("Socks UI: Couldn't find any content with the attribute [s-toc='content']")
     return
   }
+  // Set the offset
+  const offset = list.getAttribute(TOC_OFFSET) || '80px'
+  // CSS snippet to offset heading anchors
+  const style = document.createElement('style')
+  style.textContent = `
+  [${TOC_CONTENT}] ${headingSelector}::before, [${TOC_CONTENT}] ${subHeadingSelector}::before { 
+    content: '';
+    display: block; 
+    position: relative; 
+    width: 0; 
+    height: ${offset}; 
+    margin-top: -${offset};
+  } 
+  `
+  document.head.appendChild(style)
+
+  // Set active class
+  const activeClass = list.getAttribute(TOC_ACTIVE) || DEFAULT_ACTIVE
 
   // Get all headings
   const headingsToFind = subTemplate ? `${headingSelector}, ${subHeadingSelector}` : headingSelector
@@ -72,7 +95,7 @@
 
   let tree = [] as HTMLElement[]
 
-  headings.forEach((heading) => {
+  headings.forEach((heading, i) => {
     const level = heading.tagName === headingSelector.toUpperCase() ? 1 : 2
     let templateToUse = subTemplate || template
     if (level === 1) { templateToUse = template }
@@ -104,7 +127,27 @@
       if (!ul) return
       ul.appendChild(clone)
     }
+    // make it "active"
+    ScrollTrigger.create({
+      trigger: heading,
+      start: 'top 35%',
+      endTrigger: headings[i + 1] ?? content,
+      end: 'top 35%',
+      onToggle: ({ isActive }) => {
+        if (isActive) makeCurrent(cloneLink, level)
+      },
+      markers: true
+    })
   })
+
+  function makeCurrent(el: HTMLElement, level: number) {
+    // remove the active class
+    list?.querySelectorAll('a').forEach((a) => a.classList.remove(activeClass))
+    el.classList.add(activeClass)
+    if (level === 1) return
+    el.closest('ul')?.parentNode?.querySelector('a')?.classList.add(activeClass)
+  }
+
   // delete the templates
   template.remove()
   list.querySelectorAll('li ul li:first-child').forEach((li) => { li.remove() })
