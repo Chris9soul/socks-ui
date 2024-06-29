@@ -136,7 +136,6 @@
       onToggle: ({ isActive }) => {
         if (isActive) makeCurrent(cloneLink, level)
       },
-      markers: true
     })
   })
 
