@@ -132,7 +132,7 @@
       trigger: heading,
       start: 'top 35%',
       endTrigger: headings[i + 1] ?? content,
-      end: 'top 35%',
+      end: headings[i + 1] ? 'top 35%' : 'bottom 50%',
       onToggle: ({ isActive }) => {
         if (isActive) makeCurrent(cloneLink, level)
       },
