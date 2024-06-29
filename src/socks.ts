@@ -9,9 +9,9 @@
     const component = attribute.split('-')[1]
     const script = document.createElement('script')
     // if it ends with .ts, replace it with components/socks.ts
-    const replaceWith = base.endsWith('.ts') ? `components/${component}` : `${component}`
+    const replaceWith = base.endsWith('.ts') ? `components/${component}.ts` : `${component}.js`
 
-    script.src = base.replace('socks', replaceWith)
+    script.src = base.replace('socks.js', replaceWith)
     script.async = true
     document.head.appendChild(script)
   }
