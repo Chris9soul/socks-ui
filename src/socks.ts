@@ -3,10 +3,11 @@
   // @ts-ignore // typescript doesn't know about document.currentScript
   const base: string = document.currentScript.src
 
-  const components = ["s-accordion", "s-modal"]
+  const components = ["s-accordion", "s-modal", "s-toc"]
 
   function loadComponent(attribute: string) {
-    const component = attribute.split('-')[1]
+    // get the component name
+    const component = attribute.replace(/^s-/, '')
     const script = document.createElement('script')
     // if it ends with .ts, replace it with components/socks.ts
     const replaceWith = base.endsWith('.ts') ? `components/${component}.ts` : `${component}.js`
