@@ -1,6 +1,6 @@
 /**
- * Todos/Notes:
- * - 
+ * Todos/Notes: 
+ * -
  */
 // Socks UI Combobox
 (function () {
@@ -76,7 +76,7 @@
       const filter = input.value.toLowerCase()
       filteredOptions = allOptions.filter(option => {
         const optionText = getOptionText(option) || ''
-        return optionText.toLowerCase().startsWith(filter)
+        return optionText.toLowerCase().includes(filter)
       })
       list.innerHTML = ''
       filteredOptions.forEach(option => list.appendChild(option))
