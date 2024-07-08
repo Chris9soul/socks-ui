@@ -47,7 +47,7 @@
     // set active class
     const activeClass = combobox.getAttribute(ACTIVE_CLASS) || DEFAULT_ACTIVE
 
-    function setActiveDescendant(option: HTMLLIElement | null) {
+    function setActiveDescendant(option: HTMLElement | null) {
       if (option && isOpen) {
         input.setAttribute('aria-activedescendant', option.id)
         if (!isOptionInView(option)) {
@@ -58,7 +58,7 @@
       }
     }
 
-    function isOptionInView(option: HTMLLIElement) {
+    function isOptionInView(option: HTMLElement) {
       const bounding = option.getBoundingClientRect()
       const listBounding = list.getBoundingClientRect()
       return (
@@ -67,7 +67,7 @@
       )
     }
 
-    function getOptionText(option: HTMLLIElement) {
+    function getOptionText(option: HTMLElement) {
       const textElement = option.querySelector(`[${COMBOBOX_LIST_ITEM_TEXT}]`)
       return textElement ? textElement.textContent : ''
     }
@@ -83,7 +83,7 @@
       return filteredOptions.length > 0 ? filteredOptions[0] : null
     }
 
-    function setCurrentOptionStyle(option: HTMLLIElement) {
+    function setCurrentOptionStyle(option: HTMLElement) {
       filteredOptions.forEach(opt => {
         if (opt === option) {
           opt.setAttribute('aria-selected', 'true')
@@ -95,7 +95,9 @@
       })
     }
 
+    // Set the initial styles
     gsap.set(list, { display: 'none', transformOrigin: 'top center' })
+    // Create a timeline for the list
     const tl = gsap.timeline({ paused: true })
       .set(list, { display: 'block' })
       .from(list, { opacity: 0, scale: 0.95, duration: 0.2 })
@@ -177,6 +179,10 @@
         close()
       }
     })
+
+    // set initial open state
+    setCurrentOptionStyle(list.children[0] as HTMLElement)
+    setActiveDescendant(list.children[0] as HTMLElement)
   }
 
   // Loop through all the comboboxes
