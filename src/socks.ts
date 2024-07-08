@@ -3,7 +3,7 @@
   // @ts-ignore // typescript doesn't know about document.currentScript
   const base: string = document.currentScript.src
 
-  const components = ["s-accordion", "s-modal", "s-toc"]
+  const components = ["s-accordion", "s-modal", "s-toc", "s-combobox"]
 
   function loadComponent(attribute: string) {
     // get the component name

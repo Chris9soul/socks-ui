@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist-ssr
 *.local
+pnpm-lock.yaml
 
 # local wip files
 src/wip/*
