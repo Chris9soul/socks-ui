@@ -1,6 +1,6 @@
 /**
  * Todos/Notes: 
- * -
+ * - If no option matches on focus out, clear the input
  */
 // Socks UI Combobox
 (function () {

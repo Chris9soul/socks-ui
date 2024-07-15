@@ -1,6 +1,6 @@
 /**
  * Todos/Notes:
- * - 
+ * - TOC should be inside a nav landmark with a unique name (aria-label/aria-labelledby)
  */
 // Socks UI Table of Contents
 (function () {
@@ -33,9 +33,18 @@
     return
   }
   if (list.tagName !== 'UL' && list.tagName !== 'OL') {
-    console.error("Socks UI: The element with the attribute [s-toc='list'] must be a list")
+    console.error("Socks UI: The Table of Contents should be a List element")
     return
   }
+  if (!list.closest('nav')) {
+    console.error("Socks UI: The Table of Contents should be inside a Nav landmark")
+    return
+  }
+  if (list.getAttribute('aria-label') === null && list.getAttribute('aria-labelledby') === null) {
+    // add generic label
+    list.setAttribute('aria-label', 'Table of Contents')
+  }
+
   // Check for custom heading selector
   const customSelectors = list.getAttribute(TOC_CUSTOM_SELECTOR)?.split(',') || []
   // check if the custom selector is valid
