@@ -36,13 +36,14 @@
     console.error("Socks UI: The Table of Contents should be a List element")
     return
   }
-  if (!list.closest('nav')) {
+  const nav = list.closest('nav')
+  if (!nav) {
     console.error("Socks UI: The Table of Contents should be inside a Nav landmark")
     return
   }
-  if (list.getAttribute('aria-label') === null && list.getAttribute('aria-labelledby') === null) {
+  if (nav.getAttribute('aria-label') === null && nav.getAttribute('aria-labelledby') === null) {
     // add generic label
-    list.setAttribute('aria-label', 'Table of Contents')
+    nav.setAttribute('aria-label', 'Table of Contents')
   }
 
   // Check for custom heading selector
