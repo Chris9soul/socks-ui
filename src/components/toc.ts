@@ -1,6 +1,7 @@
 /**
  * Todos/Notes:
- * - TOC should be inside a nav landmark with a unique name (aria-label/aria-labelledby)
+ * - attribute for content to ignore
+ * - attribute for hiding elements when no headings are found
  */
 // Socks UI Table of Contents
 (function () {

@@ -63,7 +63,6 @@
     modalElement.setAttribute('aria-hidden', 'true')
     modalElement.setAttribute('tabindex', '-1')
     // set modal styles
-    modalElement.style.maxHeight = '90vh'
     modalElement.style.overflowY = 'auto'
 
     // find modal title (Optional)
