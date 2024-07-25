@@ -38,7 +38,6 @@
       console.error(`Socks UI: Modal ${index} is missing an ID. Please provide an ID for your modal wrapper.`)
       return
     }
-    modal.style.overflow = 'hidden' // prevent scrolling on the modal wrapper
 
     // find this modal's triggers
     const modalTriggers = document.querySelectorAll(`[${MODAL_TRIGGER}=${modalID}]`) as NodeListOf<HTMLElement>
@@ -62,8 +61,6 @@
     modalElement.setAttribute('aria-modal', 'true')
     modalElement.setAttribute('aria-hidden', 'true')
     modalElement.setAttribute('tabindex', '-1')
-    // set modal styles
-    modalElement.style.overflowY = 'auto'
 
     // find modal title (Optional)
     const modalTitle = modal.querySelector(`[${MODAL_TITLE}]`) as HTMLElement | null
