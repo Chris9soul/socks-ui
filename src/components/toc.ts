@@ -57,7 +57,7 @@
     }
     // check that no more than one comma is present
     if (customSelectors.length > 2) {
-      console.error("Socks UI: The custom selector can only have one comma")
+      console.error("Socks UI: Invalid custom selectors. Please provide up to 2 comma-separated heading tags")
       return
     }
   }
