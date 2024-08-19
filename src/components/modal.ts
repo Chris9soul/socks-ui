@@ -169,7 +169,6 @@
     modalTriggers.forEach((trigger) => {
       trigger.setAttribute('aria-haspopup', 'dialog')
       trigger.setAttribute('aria-controls', modalID)
-      trigger.setAttribute('aria-expanded', 'false')
       trigger.addEventListener('click', openModal)
     })
 
@@ -177,7 +176,6 @@
     modalCloseButtons.forEach((button) => {
       button.setAttribute('aria-label', 'Close modal')
       button.setAttribute('aria-controls', modalID)
-      button.setAttribute('aria-expanded', 'true')
       if (button.tagName !== 'BUTTON') {
         button.setAttribute('role', 'button')
         button.setAttribute('tabindex', '0')
