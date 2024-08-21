@@ -160,7 +160,7 @@
       }
 
       // If first open attribute is present, or open attribute is present, open the accordion
-      if (group.hasAttribute(FIRST_OPEN_ATTRIBUTE) && index === 0 || accordion.classList.contains(activeClass)) {
+      if ((group.hasAttribute(FIRST_OPEN_ATTRIBUTE) && index === 0) || accordion.classList.contains(activeClass)) {
         accordionMethods[accordion.id].open()
         // tl.progress(1).pause()
       }
