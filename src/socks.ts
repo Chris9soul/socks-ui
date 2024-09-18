@@ -3,7 +3,7 @@
   // @ts-ignore // typescript doesn't know about document.currentScript
   const base: string = document.currentScript.src
 
-  const components = ["accordion", "modal", "toc", "combobox"]
+  const components = ["accordion", "modal", "toc", "combobox", "carousel"]
 
   function loadComponent(attribute: string) {
     // create a script element
