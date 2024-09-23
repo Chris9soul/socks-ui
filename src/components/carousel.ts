@@ -21,11 +21,12 @@
   const ACTIVE_CLASS = 's-active-class' // default: 's-active'
   const DRAGGING_CLASS = 's-dragging-class' // default: 's-dragging'
   const DISABLED_CLASS = 's-disabled-class' // default: 's-disabled'
+  const PAUSED_CLASS = 's-paused-class' // default: 's-paused'
   const AUTOPLAY_INTERVAL = 's-autoplay' // default: 5 (seconds)
   const DURATION = 's-duration' // default: 0.5 (seconds)
   const EASE = 's-ease' // default: 'power2.out'
   const LOOP = 's-loop' // default: false
-  // const SLIDES_TO_SCROLL = 's-slides-to-scroll' // default: 1
+  const SLIDES_TO_SCROLL = 's-slides-to-scroll' // default: 1
 
   // get all carousels
   const carousels = document.querySelectorAll(
@@ -52,6 +53,7 @@
     private activeClass: string
     private draggingClass: string
     private disabledClass: string
+    private pausedClass: string
     private isEnabled: boolean
     private xSetter: Function
     private xTo: Function
@@ -61,6 +63,9 @@
     private loop: boolean
     private resizeTimeout: number | null = null;
     private liveRegion: HTMLElement
+    private slidesToScroll: number
+    private autoplayStartTime: number | null = null;
+    private autoplayRemainingTime: number | null = null;
 
     constructor(element: HTMLElement) {
       this.wrapper = element
@@ -68,6 +73,7 @@
       this.slides = Array.from(element.querySelectorAll(`[${CAROUSEL_SLIDE}]`)) as HTMLElement[]
       this.nextButton = element.querySelector(`[${CAROUSEL_NEXT}]`)
       this.prevButton = element.querySelector(`[${CAROUSEL_PREV}]`)
+      this.pauseButton = element.querySelector(`[${CAROUSEL_PAUSE}]`)
       this.dots = []
       this.currentIndex = 0
       this.dragging = false
@@ -77,9 +83,10 @@
       this.threshold = 0.3 // threshold for dragging
       this.autoplayInterval = null
       this.autoplayTimeoutId = null
-      this.activeClass = 's-active'
-      this.draggingClass = 's-dragging'
-      this.disabledClass = 's-disabled'
+      this.activeClass = element.getAttribute(ACTIVE_CLASS) ? element.getAttribute(ACTIVE_CLASS) as string : 's-active'
+      this.draggingClass = element.getAttribute(DRAGGING_CLASS) ? element.getAttribute(DRAGGING_CLASS) as string : 's-dragging'
+      this.disabledClass = element.getAttribute(DISABLED_CLASS) ? element.getAttribute(DISABLED_CLASS) as string : 's-disabled'
+      this.pausedClass = element.getAttribute(PAUSED_CLASS) ? element.getAttribute(PAUSED_CLASS) as string : 's-paused'
       this.isEnabled = true
       this.xSetter = gsap.quickSetter(this.root, 'x', 'px')
       this.duration = element.getAttribute(DURATION) ? parseFloat(element.getAttribute(DURATION) as string) : 0.5
@@ -88,8 +95,8 @@
       this.slidePositions = []
       this.loop = element.getAttribute(LOOP) ? element.getAttribute(LOOP) === 'true' : false
       this.liveRegion = this.createLiveRegion()
-      this.pauseButton = element.querySelector(`[${CAROUSEL_PAUSE}]`)
       this.isPaused = false
+      this.slidesToScroll = element.getAttribute(SLIDES_TO_SCROLL) ? parseInt(element.getAttribute(SLIDES_TO_SCROLL) as string) : 1
 
       this.handleResize = this.handleResize.bind(this)
       this.init()
@@ -105,6 +112,7 @@
 
     private init(): void {
       this.setupOptions()
+      this.calculateSlidePositions()
       this.createDots()
       this.updateActiveStates()
       this.setupPauseButton()
@@ -113,7 +121,6 @@
         this.loop = true // if autoplay is enabled, loop is enabled
       }
       this.updateButtonStates()
-      this.calculateSlidePositions()
       this.addEventListeners()
       this.setupKeyboardNavigation()
       this.updateAriaAttributes()
@@ -218,7 +225,8 @@
       // Clear existing dots
       dotParent.innerHTML = ''
 
-      this.slides.forEach((_, index) => {
+      // this.slides.forEach((_, index) => {
+      this.slidePositions.forEach((_, index) => {
         const dot = dotTemplate.cloneNode(true) as HTMLElement
         dot.setAttribute('aria-label', `Go to slide ${index + 1}`)
         dot.setAttribute('role', 'button')
@@ -234,7 +242,11 @@
       this.startX = 'touches' in e ? e.touches[0].clientX : e.clientX
       this.currentX = gsap.getProperty(this.root, 'x') as number
       this.wrapper.classList.add(this.draggingClass)
-      this.stopAutoplay()
+
+      // Pause autoplay when dragging starts
+      if (this.autoplayInterval !== null && !this.isPaused) {
+        this.stopAutoplay()
+      }
     }
 
     private onDragMove = (e: MouseEvent | TouchEvent): void => {
@@ -259,7 +271,7 @@
         // Check if the user has dragged the carousel enough to change the slide
         if (draggedPercentage > this.threshold) {
           const direction = this.dragX > 0 ? -1 : 1
-          targetIndex = Math.max(0, Math.min(this.slides.length - 1, this.currentIndex + direction))
+          targetIndex = Math.max(0, Math.min(this.slides.length - this.slidesToScroll, this.currentIndex + direction))
         }
 
         // Update active states and button states immediately
@@ -271,7 +283,9 @@
 
         this.goToSlide(targetIndex)
         this.dragX = 0
-        if (this.autoplayInterval !== null) {
+
+        // Resume autoplay when dragging ends
+        if (this.autoplayInterval !== null && this.isPaused) {
           this.startAutoplay()
         }
       })
@@ -280,8 +294,8 @@
     private calculateSlidePositions(): void {
       this.slidePositions = [0]
       let currentPosition = 0
-      for (let i = 1; i < this.slides.length; i++) {
-        currentPosition -= this.slides[i].offsetLeft - this.slides[i - 1].offsetLeft
+      for (let i = this.slidesToScroll; i < this.slides.length; i += this.slidesToScroll) {
+        currentPosition -= this.slides[i].offsetLeft - this.slides[i - this.slidesToScroll].offsetLeft
         this.slidePositions.push(currentPosition)
       }
     }
@@ -310,7 +324,8 @@
     }
 
     private goToNext = (): void => {
-      if (this.loop && this.currentIndex === this.slides.length - 1) {
+      if (this.nextButton?.getAttribute('aria-disabled') === 'true') return
+      if (this.loop && this.currentIndex === this.slides.length - this.slidesToScroll) {
         this.goToSlide(0)
       } else {
         this.goToSlide(this.currentIndex + 1)
@@ -318,20 +333,29 @@
     }
 
     private goToPrev = (): void => {
+      if (this.prevButton?.getAttribute('aria-disabled') === 'true') return
       if (this.loop && this.currentIndex === 0) {
-        this.goToSlide(this.slides.length - 1)
+        this.goToSlide(this.slides.length - this.slidesToScroll)
       } else {
-        this.goToSlide(this.currentIndex - 1)
+        this.goToSlide(this.currentIndex - this.slidesToScroll)
       }
     }
 
     private updateActiveStates(): void {
+      const activeSlides = Array.from({ length: this.slidesToScroll }, (_, i) => this.currentIndex * this.slidesToScroll + i)
       this.slides.forEach((slide, index) => {
-        slide.classList.toggle(this.activeClass, index === this.currentIndex)
+        const isActive = activeSlides.includes(index)
+        slide.classList.toggle(this.activeClass, isActive)
+        slide.setAttribute('aria-hidden', (!isActive).toString())
       })
 
       this.dots.forEach((dot, index) => {
         dot.classList.toggle(this.activeClass, index === this.currentIndex)
+        if (index === this.currentIndex) {
+          dot.setAttribute('aria-hidden', 'false')
+        } else {
+          dot.setAttribute('aria-hidden', 'true')
+        }
       })
     }
 
@@ -360,22 +384,32 @@
       }
 
       updateButton(this.prevButton, 'Previous slide', this.currentIndex === 0)
-      updateButton(this.nextButton, 'Next slide', this.currentIndex === this.slides.length - 1)
+      updateButton(this.nextButton, 'Next slide', this.currentIndex === this.slides.length - this.slidesToScroll)
     }
 
     private startAutoplay(): void {
       if (this.isPaused) return
       this.stopAutoplay()
+
+      const interval = this.autoplayRemainingTime !== null ? this.autoplayRemainingTime : (this.autoplayInterval ?? 5000)
+      this.autoplayStartTime = Date.now()
+
       this.autoplayTimeoutId = window.setTimeout(() => {
         this.goToNext()
+        this.autoplayRemainingTime = null
         this.startAutoplay()
-      }, this.autoplayInterval ?? 5000)
+      }, interval)
     }
 
     private stopAutoplay(): void {
       if (this.autoplayTimeoutId !== null) {
         window.clearTimeout(this.autoplayTimeoutId)
         this.autoplayTimeoutId = null
+
+        if (this.autoplayStartTime !== null) {
+          const elapsedTime = Date.now() - this.autoplayStartTime
+          this.autoplayRemainingTime = Math.max(0, (this.autoplayInterval ?? 5000) - elapsedTime)
+        }
       }
     }
 
@@ -412,22 +446,21 @@
           this.nextButton.removeEventListener('keydown', this.handleButtonKeydown)
         }
       }
-      if (this.prevButton) {
-        this.prevButton.removeEventListener('click', this.goToPrev)
-        if (this.prevButton.nodeName !== 'BUTTON') {
-          this.prevButton.removeAttribute('tabindex')
-          this.prevButton.removeEventListener('keydown', this.handleButtonKeydown)
+
+      if (this.pauseButton && this.autoplayInterval !== null) {
+        this.pauseButton.removeEventListener('click', this.togglePause)
+        if (this.pauseButton.nodeName !== 'BUTTON') {
+          this.pauseButton.removeAttribute('tabindex')
+          this.pauseButton.removeEventListener('keydown', this.handleButtonKeydown)
         }
       }
+
 
       // Remove event listeners for dots
       this.dots.forEach((dot, index) => {
         dot.removeEventListener('click', () => this.goToSlide(index))
         dot.removeEventListener('keydown', (e) => this.handleDotKeydown(e, index))
       })
-      if (this.pauseButton && this.autoplayInterval !== null) {
-        this.pauseButton.removeEventListener('click', this.togglePause)
-      }
     }
 
     private createLiveRegion(): HTMLElement {
@@ -496,8 +529,11 @@
     private setupPauseButton(): void {
       if (this.pauseButton && this.autoplayInterval !== null) {
         this.pauseButton.addEventListener('click', this.togglePause)
+        if (this.pauseButton.nodeName !== 'BUTTON') {
+          this.pauseButton.setAttribute('tabindex', '0')
+          this.pauseButton.addEventListener('keydown', this.handleButtonKeydown)
+        }
         this.pauseButton.setAttribute('aria-label', 'Pause carousel')
-        this.pauseButton.setAttribute('aria-pressed', 'false')
       }
     }
 
@@ -507,10 +543,12 @@
         this.stopAutoplay()
         this.pauseButton?.setAttribute('aria-label', 'Play carousel')
         this.pauseButton?.setAttribute('aria-pressed', 'true')
+        this.pauseButton?.classList.add(this.pausedClass)
       } else {
         this.startAutoplay()
         this.pauseButton?.setAttribute('aria-label', 'Pause carousel')
         this.pauseButton?.setAttribute('aria-pressed', 'false')
+        this.pauseButton?.classList.remove(this.pausedClass)
       }
     }
 
