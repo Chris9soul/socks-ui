@@ -351,11 +351,6 @@
 
       this.dots.forEach((dot, index) => {
         dot.classList.toggle(this.activeClass, index === this.currentIndex)
-        if (index === this.currentIndex) {
-          dot.setAttribute('aria-hidden', 'false')
-        } else {
-          dot.setAttribute('aria-hidden', 'true')
-        }
       })
     }
 
