@@ -1,3 +1,7 @@
+/**
+ * TODO:
+ * - Infinite slider
+ */
 (function () {
   // Check if GSAP is included in the project
   if (window.gsap === undefined) {

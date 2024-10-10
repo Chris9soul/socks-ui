@@ -25,6 +25,7 @@
   const DURATION_ATTRIBUTE = 's-duration' // Allows custom duration
   const MULTIPLE_ATTRIBUTE = 's-multiple' // Allows multiple accordions to be open at the same time
   const FIRST_OPEN_ATTRIBUTE = 's-first-open' // Allows first accordion to be open by default
+  const ALLOW_CLOSE_ATTRIBUTE = 's-allow-close' // Allows accordions to be closed
   const ADD_ACTIVE_CLASS_ATTRIBUTE = 's-add-class' // Allows custom active class that will be added to elements that have it
   const ACTIVE_CLASS_ATTRIBUTE = 's-active-class' // Allows custom active class that will be added to elements that have s-add-active-class
 
@@ -137,8 +138,6 @@
           if (isMultiple) return
           accordions.forEach((acc, accIndex) => {
             if (accIndex === index || !acc.classList.contains(activeClass)) return
-            // const trigger = acc.querySelector(`[${ACCORDION_TRIGGER}]`) as HTMLElement
-            // trigger.click()
             accordionMethods[acc.id].close()
           })
         },
@@ -159,12 +158,6 @@
         }
       }
 
-      // If first open attribute is present, or open attribute is present, open the accordion
-      if ((group.hasAttribute(FIRST_OPEN_ATTRIBUTE) && index === 0) || accordion.classList.contains(activeClass)) {
-        accordionMethods[accordion.id].open()
-        // tl.progress(1).pause()
-      }
-
       // trigger on click or enter/space key
       trigger.addEventListener('click', toggleAccordion)
       trigger.addEventListener('keydown', (e) => {
@@ -178,12 +171,18 @@
         //toggle timeline and open attribute
         if (accordion.classList.contains(activeClass)) {
           // Close accordion
-          if (group.hasAttribute(FIRST_OPEN_ATTRIBUTE)) return
+          if (group.hasAttribute(FIRST_OPEN_ATTRIBUTE) && !group.hasAttribute(ALLOW_CLOSE_ATTRIBUTE)) return
           accordionMethods[accordion.id].close()
         } else {
           // Open accordion
           accordionMethods[accordion.id].open()
         }
+      }
+
+      // If first open attribute is present, or open attribute is present, open the accordion
+      if ((group.hasAttribute(FIRST_OPEN_ATTRIBUTE) && index === 0) || accordion.classList.contains(activeClass)) {
+        accordionMethods[accordion.id].open()
+        // tl.progress(1).pause()
       }
     })
   })
