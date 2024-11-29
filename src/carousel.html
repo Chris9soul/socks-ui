@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carousel</title>
+  </head>
+  <body>
+    <h1>Carousel</h1>
+
+    <div s-carousel="wrapper">
+      <div s-carousel="root">
+        <div s-carousel="slide">Slide 1</div>
+        <div s-carousel="slide">Slide 2</div>
+      </div>
+    </div>
+
+    <div>
+      <button class="nav-button">Next</button>
+      <button class="nav-button">Prev</button>
+    </div>
+
+    <style>
+      [s-carousel='wrapper'] {
+        border: 1px solid black;
+      }
+      [s-carousel='root'] {
+        display: flex;
+      }
+      [s-carousel='slide'] {
+        width: 100%;
+        flex: 0 0 auto;
+        height: 400px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+
+    <script src="components/carousel.ts"></script>
+  </body>
+</html>

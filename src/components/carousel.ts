@@ -2,6 +2,11 @@
  * TODO:
  * - Infinite slider
  */
+
+/**
+ * Description:
+ * The carousel component is a simple slider that allows users to navigate through a series of slides.
+ */
 (function () {
   // Check if GSAP is included in the project
   if (window.gsap === undefined) {
@@ -38,38 +43,39 @@
   ) as NodeListOf<HTMLElement>
 
   class Carousel {
-    private wrapper: HTMLElement
-    private root: HTMLElement
-    private slides: HTMLElement[]
-    private nextButton: HTMLElement | null
-    private prevButton: HTMLElement | null
-    private dots: HTMLElement[]
-    private pauseButton: HTMLElement | null
-    private isPaused: boolean
-    private autoplayInterval: number | null
-    private autoplayTimeoutId: number | null
-    private currentIndex: number
-    private dragging: boolean
-    private startX: number
-    private currentX: number
-    private dragX: number
-    private threshold: number
-    private activeClass: string
-    private draggingClass: string
-    private disabledClass: string
-    private pausedClass: string
-    private isEnabled: boolean
-    private xSetter: Function
-    private xTo: Function
-    private slidePositions: number[]
-    private duration: number
-    private ease: string
-    private loop: boolean
-    private resizeTimeout: number | null = null;
-    private liveRegion: HTMLElement
-    private slidesToScroll: number
-    private autoplayStartTime: number | null = null;
-    private autoplayRemainingTime: number | null = null;
+    private eventListeners: { [key: string]: Function[] } = {}
+    wrapper: HTMLElement
+    root: HTMLElement
+    slides: HTMLElement[]
+    nextButton: HTMLElement | null
+    prevButton: HTMLElement | null
+    dots: HTMLElement[]
+    pauseButton: HTMLElement | null
+    isPaused: boolean
+    autoplayInterval: number | null
+    autoplayTimeoutId: number | null
+    currentIndex: number
+    dragging: boolean
+    startX: number
+    currentX: number
+    dragX: number
+    threshold: number
+    activeClass: string
+    draggingClass: string
+    disabledClass: string
+    pausedClass: string
+    isEnabled: boolean
+    #xSetter: Function
+    #xTo: Function
+    slidePositions: number[]
+    duration: number
+    ease: string
+    loop: boolean
+    resizeTimeout: number | null = null
+    liveRegion: HTMLElement
+    slidesToScroll: number
+    autoplayStartTime: number | null = null
+    autoplayRemainingTime: number | null = null
 
     constructor(element: HTMLElement) {
       this.wrapper = element
@@ -92,13 +98,13 @@
       this.disabledClass = element.getAttribute(DISABLED_CLASS) ? element.getAttribute(DISABLED_CLASS) as string : 's-disabled'
       this.pausedClass = element.getAttribute(PAUSED_CLASS) ? element.getAttribute(PAUSED_CLASS) as string : 's-paused'
       this.isEnabled = true
-      this.xSetter = gsap.quickSetter(this.root, 'x', 'px')
+      this.#xSetter = gsap.quickSetter(this.root, 'x', 'px')
       this.duration = element.getAttribute(DURATION) ? parseFloat(element.getAttribute(DURATION) as string) : 0.5
       this.ease = element.getAttribute(EASE) ? element.getAttribute(EASE) as string : 'power2.out'
-      this.xTo = this.createQuickTo()
+      this.#xTo = this.#createQuickTo()
       this.slidePositions = []
       this.loop = element.getAttribute(LOOP) ? element.getAttribute(LOOP) === 'true' : false
-      this.liveRegion = this.createLiveRegion()
+      this.liveRegion = this.#createLiveRegion()
       this.isPaused = false
       this.slidesToScroll = element.getAttribute(SLIDES_TO_SCROLL) ? parseInt(element.getAttribute(SLIDES_TO_SCROLL) as string) : 1
 
@@ -106,7 +112,21 @@
       this.init()
     }
 
-    private createQuickTo() {
+    public on(eventName: string, callback: Function): void {
+      if (!this.eventListeners[eventName]) {
+        this.eventListeners[eventName] = []
+      }
+      this.eventListeners[eventName].push(callback)
+    }
+
+    public off(eventName: string, callback: Function): void {
+      if (!this.eventListeners[eventName]) return
+      this.eventListeners[eventName] = this.eventListeners[eventName].filter(
+        listener => listener !== callback
+      )
+    }
+
+    #createQuickTo() {
       let quickTo = gsap.quickTo(this.root, 'x', { duration: this.duration, ease: this.ease })
       return (value: number) => {
         quickTo(value)
@@ -114,46 +134,63 @@
       }
     }
 
-    private init(): void {
-      this.setupOptions()
-      this.calculateSlidePositions()
-      this.createDots()
-      this.updateActiveStates()
-      this.setupPauseButton()
+    #emitEvent(eventName: string, detail: any = {}): void {
+      // Call event listeners
+      if (this.eventListeners[eventName]) {
+        this.eventListeners[eventName].forEach(callback => callback(detail))
+      }
+
+      // Also dispatch DOM event for backward compatibility
+      const event = new CustomEvent(`socks:carousel:${eventName}`, {
+        bubbles: true,
+        detail
+      })
+      this.wrapper.dispatchEvent(event)
+    }
+
+    init(): void {
+      this.#setupOptions()
+      this.#calculateSlidePositions()
+      this.#createDots()
+      this.#updateActiveStates()
+      this.#setupPauseButton()
       if (this.autoplayInterval !== null && this.isEnabled) {
         this.startAutoplay()
         this.loop = true // if autoplay is enabled, loop is enabled
       }
-      this.updateButtonStates()
-      this.addEventListeners()
-      this.setupKeyboardNavigation()
-      this.updateAriaAttributes()
+      this.#updateButtonStates()
+      this.#addEventListeners()
+      this.#setupKeyboardNavigation()
+      this.#updateAriaAttributes()
       window.addEventListener('resize', this.handleResize)
+
+      // Emit init event
+      this.#emitEvent('init', { carousel: this })
     }
 
-    private addEventListeners(): void {
+    #addEventListeners(): void {
       if (!this.isEnabled) return
 
-      this.root.addEventListener('mousedown', this.onDragStart)
-      this.root.addEventListener('mouseup', this.onDragEnd)
-      this.root.addEventListener('mousemove', this.onDragMove)
-      this.root.addEventListener('touchstart', this.onDragStart)
-      this.root.addEventListener('touchend', this.onDragEnd)
-      this.root.addEventListener('touchcancel', this.onDragEnd)
-      this.root.addEventListener('touchmove', this.onDragMove)
+      this.root.addEventListener('mousedown', this.#onDragStart)
+      this.root.addEventListener('mouseup', this.#onDragEnd)
+      this.root.addEventListener('mousemove', this.#onDragMove)
+      this.root.addEventListener('touchstart', this.#onDragStart)
+      this.root.addEventListener('touchend', this.#onDragEnd)
+      this.root.addEventListener('touchcancel', this.#onDragEnd)
+      this.root.addEventListener('touchmove', this.#onDragMove)
 
       if (this.nextButton) {
         this.nextButton.addEventListener('click', this.goToNext)
         if (this.nextButton.nodeName !== 'BUTTON') {
           this.nextButton.setAttribute('tabindex', '0')
-          this.nextButton.addEventListener('keydown', this.handleButtonKeydown)
+          this.nextButton.addEventListener('keydown', this.#handleButtonKeydown)
         }
       }
       if (this.prevButton) {
         this.prevButton.addEventListener('click', this.goToPrev)
         if (this.prevButton.nodeName !== 'BUTTON') {
           this.prevButton.setAttribute('tabindex', '0')
-          this.prevButton.addEventListener('keydown', this.handleButtonKeydown)
+          this.prevButton.addEventListener('keydown', this.#handleButtonKeydown)
         }
       }
       // Add event listeners for dots
@@ -165,26 +202,26 @@
         })
         dot.addEventListener('keydown', (e) => {
           if (index !== this.currentIndex) {
-            this.handleDotKeydown(e, index)
+            this.#handleDotKeydown(e, index)
           }
         })
       })
       if (this.pauseButton && this.autoplayInterval !== null) {
-        this.pauseButton.addEventListener('click', this.togglePause)
+        this.pauseButton.addEventListener('click', this.#togglePause)
       }
     }
 
-    private handleResize(): void {
+    handleResize(): void {
       if (this.resizeTimeout) {
         clearTimeout(this.resizeTimeout)
       }
       this.resizeTimeout = window.setTimeout(() => {
-        this.calculateSlidePositions()
+        this.#calculateSlidePositions()
         this.resetSlider()
       }, 250) // 250ms debounce
     }
 
-    private setupOptions(): void {
+    #setupOptions(): void {
       const thresholdAttr = this.wrapper.getAttribute(CAROUSEL_THRESHOLD)
       if (thresholdAttr) {
         const threshold = parseFloat(thresholdAttr)
@@ -214,7 +251,7 @@
       }
     }
 
-    private createDots(): void {
+    #createDots(): void {
       const dotTemplate = this.wrapper.querySelector(
         `[${CAROUSEL_DOT}]`
       ) as HTMLElement
@@ -240,7 +277,7 @@
       })
     }
 
-    private onDragStart = (e: MouseEvent | TouchEvent): void => {
+    #onDragStart = (e: MouseEvent | TouchEvent): void => {
       if (e.type === 'touchstart') e.preventDefault()
       this.dragging = true
       this.startX = 'touches' in e ? e.touches[0].clientX : e.clientX
@@ -251,17 +288,23 @@
       if (this.autoplayInterval !== null && !this.isPaused) {
         this.stopAutoplay()
       }
+
+      // Emit drag start event
+      this.#emitEvent('dragstart', {
+        startX: this.startX,
+        currentX: this.currentX
+      })
     }
 
-    private onDragMove = (e: MouseEvent | TouchEvent): void => {
+    #onDragMove = (e: MouseEvent | TouchEvent): void => {
       if (!this.dragging) return
       const dragDistance = 'touches' in e ? e.touches[0].clientX - this.startX : e.clientX - this.startX
       const x = this.currentX + dragDistance
       this.dragX = dragDistance
-      this.xSetter(x)
+      this.#xSetter(x)
     }
 
-    private onDragEnd = (): void => {
+    #onDragEnd = (): void => {
       if (!this.dragging) return
       this.dragging = false
       this.wrapper.classList.remove(this.draggingClass)
@@ -281,8 +324,8 @@
         // Update active states and button states immediately
         if (targetIndex !== this.currentIndex) {
           this.currentIndex = targetIndex
-          this.updateActiveStates()
-          if (!this.loop) this.updateButtonStates()
+          this.#updateActiveStates()
+          if (!this.loop) this.#updateButtonStates()
         }
 
         this.goToSlide(targetIndex)
@@ -292,10 +335,16 @@
         if (this.autoplayInterval !== null && this.isPaused) {
           this.startAutoplay()
         }
+
+        // Emit drag end event
+        this.#emitEvent('dragend', {
+          dragDistance: this.dragX,
+          currentIndex: this.currentIndex
+        })
       })
     }
 
-    private calculateSlidePositions(): void {
+    #calculateSlidePositions(): void {
       this.slidePositions = [0]
       let currentPosition = 0
       for (let i = this.slidesToScroll; i < this.slides.length; i += this.slidesToScroll) {
@@ -304,30 +353,37 @@
       }
     }
 
-    private goToSlide(index: number, animate: boolean = true): void {
+    public goToSlide(index: number, animate: boolean = true): void {
+      const previousIndex = this.currentIndex
       if (index < 0) index = 0
       if (index >= this.slides.length) index = this.slides.length - 1
 
       const x = this.slidePositions[index]
       if (animate) {
-        this.xTo(x)
+        this.#xTo(x)
       } else {
-        this.xSetter(x)
+        this.#xSetter(x)
       }
 
       this.currentIndex = index
-      this.updateActiveStates()
-      if (!this.loop) this.updateButtonStates()
+      this.#updateActiveStates()
+      if (!this.loop) this.#updateButtonStates()
 
       if (this.autoplayInterval !== null) {
         this.stopAutoplay()
         this.startAutoplay()
       }
-      this.updateAriaAttributes()
-      this.announceSlideChange()
+      this.#updateAriaAttributes()
+      this.#announceSlideChange()
+
+      // Emit slide change event
+      this.#emitEvent('change', {
+        currentIndex: this.currentIndex,
+        previousIndex: previousIndex
+      })
     }
 
-    private goToNext = (): void => {
+    public goToNext = (): void => {
       if (this.nextButton?.getAttribute('aria-disabled') === 'true') return
       if (this.loop && this.currentIndex === this.slides.length - this.slidesToScroll) {
         this.goToSlide(0)
@@ -336,7 +392,7 @@
       }
     }
 
-    private goToPrev = (): void => {
+    public goToPrev = (): void => {
       if (this.prevButton?.getAttribute('aria-disabled') === 'true') return
       if (this.loop && this.currentIndex === 0) {
         this.goToSlide(this.slides.length - this.slidesToScroll)
@@ -345,7 +401,7 @@
       }
     }
 
-    private updateActiveStates(): void {
+    #updateActiveStates(): void {
       const activeSlides = Array.from({ length: this.slidesToScroll }, (_, i) => this.currentIndex * this.slidesToScroll + i)
       this.slides.forEach((slide, index) => {
         const isActive = activeSlides.includes(index)
@@ -358,7 +414,7 @@
       })
     }
 
-    private updateButtonStates(): void {
+    #updateButtonStates(): void {
       const updateButton = (button: HTMLElement | null, label: string, isDisabled: boolean) => {
         if (button) {
           button.setAttribute('aria-label', label)
@@ -386,7 +442,7 @@
       updateButton(this.nextButton, 'Next slide', this.currentIndex === this.slides.length - this.slidesToScroll)
     }
 
-    private startAutoplay(): void {
+    public startAutoplay(): void {
       if (this.isPaused) return
       this.stopAutoplay()
 
@@ -400,7 +456,7 @@
       }, interval)
     }
 
-    private stopAutoplay(): void {
+    public stopAutoplay(): void {
       if (this.autoplayTimeoutId !== null) {
         window.clearTimeout(this.autoplayTimeoutId)
         this.autoplayTimeoutId = null
@@ -412,14 +468,14 @@
       }
     }
 
-    private resetSlider(): void {
+    public resetSlider(): void {
       if (this.isEnabled) {
         // Go to the current slide (this will recalculate positions)
         this.goToSlide(this.currentIndex, false)
 
         // Recalculate and update everything
-        this.updateActiveStates()
-        this.updateButtonStates()
+        this.#updateActiveStates()
+        this.#updateButtonStates()
 
         // Restart autoplay if it was active
         if (this.autoplayInterval !== null) {
@@ -429,28 +485,28 @@
       }
     }
 
-    private removeEventListeners(): void {
-      this.root.removeEventListener('mousedown', this.onDragStart)
-      this.root.removeEventListener('mouseup', this.onDragEnd)
-      this.root.removeEventListener('mousemove', this.onDragMove)
-      this.root.removeEventListener('touchstart', this.onDragStart)
-      this.root.removeEventListener('touchend', this.onDragEnd)
-      this.root.removeEventListener('touchcancel', this.onDragEnd)
-      this.root.removeEventListener('touchmove', this.onDragMove)
+    public removeEventListeners(): void {
+      this.root.removeEventListener('mousedown', this.#onDragStart)
+      this.root.removeEventListener('mouseup', this.#onDragEnd)
+      this.root.removeEventListener('mousemove', this.#onDragMove)
+      this.root.removeEventListener('touchstart', this.#onDragStart)
+      this.root.removeEventListener('touchend', this.#onDragEnd)
+      this.root.removeEventListener('touchcancel', this.#onDragEnd)
+      this.root.removeEventListener('touchmove', this.#onDragMove)
 
       if (this.nextButton) {
         this.nextButton.removeEventListener('click', this.goToNext)
         if (this.nextButton.nodeName !== 'BUTTON') {
           this.nextButton.removeAttribute('tabindex')
-          this.nextButton.removeEventListener('keydown', this.handleButtonKeydown)
+          this.nextButton.removeEventListener('keydown', this.#handleButtonKeydown)
         }
       }
 
       if (this.pauseButton && this.autoplayInterval !== null) {
-        this.pauseButton.removeEventListener('click', this.togglePause)
+        this.pauseButton.removeEventListener('click', this.#togglePause)
         if (this.pauseButton.nodeName !== 'BUTTON') {
           this.pauseButton.removeAttribute('tabindex')
-          this.pauseButton.removeEventListener('keydown', this.handleButtonKeydown)
+          this.pauseButton.removeEventListener('keydown', this.#handleButtonKeydown)
         }
       }
 
@@ -458,11 +514,11 @@
       // Remove event listeners for dots
       this.dots.forEach((dot, index) => {
         dot.removeEventListener('click', () => this.goToSlide(index))
-        dot.removeEventListener('keydown', (e) => this.handleDotKeydown(e, index))
+        dot.removeEventListener('keydown', (e) => this.#handleDotKeydown(e, index))
       })
     }
 
-    private createLiveRegion(): HTMLElement {
+    #createLiveRegion(): HTMLElement {
       const liveRegion = document.createElement('div')
       liveRegion.setAttribute('aria-live', 'polite')
       liveRegion.setAttribute('aria-atomic', 'true')
@@ -476,12 +532,12 @@
       return liveRegion
     }
 
-    private setupKeyboardNavigation(): void {
+    #setupKeyboardNavigation(): void {
       this.root.setAttribute('tabindex', '0')
-      this.root.addEventListener('keydown', this.handleKeyDown)
+      this.root.addEventListener('keydown', this.#handleKeyDown)
     }
 
-    private handleKeyDown = (e: KeyboardEvent): void => {
+    #handleKeyDown = (e: KeyboardEvent): void => {
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault()
@@ -494,7 +550,7 @@
       }
     }
 
-    private updateAriaAttributes(): void {
+    #updateAriaAttributes(): void {
       this.root.setAttribute('aria-roledescription', 'carousel')
       this.slides.forEach((slide, index) => {
         slide.setAttribute('role', 'group')
@@ -503,7 +559,7 @@
       })
     }
 
-    private announceSlideChange(): void {
+    #announceSlideChange(): void {
       const currentSlide = this.slides[this.currentIndex]
       const slideNumber = this.currentIndex + 1
       const totalSlides = this.slides.length
@@ -511,32 +567,32 @@
       this.liveRegion.textContent = `${slideContent}, ${slideNumber} of ${totalSlides}`
     }
 
-    private handleButtonKeydown = (e: KeyboardEvent): void => {
+    #handleButtonKeydown = (e: KeyboardEvent): void => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
           ; (e.target as HTMLElement).click()
       }
     }
 
-    private handleDotKeydown = (e: KeyboardEvent, index: number): void => {
+    #handleDotKeydown = (e: KeyboardEvent, index: number): void => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
         this.goToSlide(index)
       }
     }
 
-    private setupPauseButton(): void {
+    #setupPauseButton(): void {
       if (this.pauseButton && this.autoplayInterval !== null) {
-        this.pauseButton.addEventListener('click', this.togglePause)
+        this.pauseButton.addEventListener('click', this.#togglePause)
         if (this.pauseButton.nodeName !== 'BUTTON') {
           this.pauseButton.setAttribute('tabindex', '0')
-          this.pauseButton.addEventListener('keydown', this.handleButtonKeydown)
+          this.pauseButton.addEventListener('keydown', this.#handleButtonKeydown)
         }
         this.pauseButton.setAttribute('aria-label', 'Pause carousel')
       }
     }
 
-    private togglePause = (): void => {
+    #togglePause = (): void => {
       this.isPaused = !this.isPaused
       if (this.isPaused) {
         this.stopAutoplay()
@@ -554,8 +610,8 @@
     public enable(): void {
       if (!this.isEnabled) {
         this.isEnabled = true
-        this.addEventListeners()
-        this.calculateSlidePositions()
+        this.#addEventListeners()
+        this.#calculateSlidePositions()
         this.resetSlider()
         if (this.autoplayInterval !== null) {
           this.startAutoplay()
@@ -568,11 +624,11 @@
         this.isEnabled = false
         this.removeEventListeners()
         this.stopAutoplay()
-        this.resetDisabledState()
+        this.#resetDisabledState()
       }
     }
 
-    private resetDisabledState(): void {
+    #resetDisabledState(): void {
       // Reset the root element's transform when carousel is disabled
       this.root.style.transform = ''
 
@@ -591,11 +647,14 @@
         clearTimeout(this.resizeTimeout)
       }
       window.removeEventListener('resize', this.handleResize)
-      this.root.removeEventListener('keydown', this.handleKeyDown)
+      this.root.removeEventListener('keydown', this.#handleKeyDown)
       this.wrapper.removeChild(this.liveRegion)
       if (this.pauseButton && this.autoplayInterval !== null) {
-        this.pauseButton.removeEventListener('click', this.togglePause)
+        this.pauseButton.removeEventListener('click', this.#togglePause)
       }
+
+      // Emit destroy event
+      this.#emitEvent('destroy', { carousel: this })
     }
   }
 
