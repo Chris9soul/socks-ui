@@ -19,6 +19,7 @@
 
   // Options
   const MODAL_MANUAL = 's-manual' // optional attribute to not need a trigger to open the modal
+  const FOCUS_ON = 's-focus-on' // optional attribute to focus on a specific element when the modal is opened
 
   // get all modal triggers
   const modals = document.querySelectorAll(`[${MODAL_WRAPPER}]`) as NodeListOf<HTMLElement>
@@ -56,6 +57,19 @@
       return
     }
 
+    let focusElement = modalElement // default focus element
+    // check for focus-on attribute
+    const focusOn = modal.getAttribute(FOCUS_ON) || null
+    if (focusOn) {
+      focusElement = modalElement.querySelector(focusOn) as HTMLElement
+      if (!focusElement) {
+        console.error(`Socks UI: Couldn't find the element with selector ${focusOn} in modal ${modalID}. Make sure the element exists.`)
+        return
+      }
+    }
+
+
+
     // set modal element attributes
     modalElement.setAttribute('role', 'dialog')
     modalElement.setAttribute('aria-modal', 'true')
@@ -92,7 +106,7 @@
     const tl = gsap.timeline({
       paused: true,
       onComplete: () => {
-        modalElement.focus() // Set focus on the modal when it's opened
+        focusElement.focus() // Set focus on the modal when it's opened
       },
     })
     tl.set(modal, { display: 'flex' })
