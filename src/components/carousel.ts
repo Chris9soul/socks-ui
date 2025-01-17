@@ -76,6 +76,11 @@
     slidesToScroll: number
     autoplayStartTime: number | null = null
     autoplayRemainingTime: number | null = null
+    private isHorizontalDrag: boolean = false
+    private dragLocked: boolean = false
+    private startY: number = 0
+    // private dragStarted: boolean = false
+    // private dragThreshold: number = 10
 
     constructor(element: HTMLElement) {
       this.wrapper = element
@@ -278,10 +283,13 @@
     }
 
     #onDragStart = (e: MouseEvent | TouchEvent): void => {
-      if (e.type === 'touchstart') e.preventDefault()
+      //if (e.type === 'touchstart') e.preventDefault()
       this.dragging = true
       this.startX = 'touches' in e ? e.touches[0].clientX : e.clientX
+      this.startY = 'touches' in e ? e.touches[0].clientY : e.clientY
       this.currentX = gsap.getProperty(this.root, 'x') as number
+      this.isHorizontalDrag = false // Add this property to class
+      this.dragLocked = false // Add this property to class
       this.wrapper.classList.add(this.draggingClass)
 
       // Pause autoplay when dragging starts
@@ -289,7 +297,6 @@
         this.stopAutoplay()
       }
 
-      // Emit drag start event
       this.#emitEvent('dragstart', {
         startX: this.startX,
         currentX: this.currentX
@@ -298,10 +305,30 @@
 
     #onDragMove = (e: MouseEvent | TouchEvent): void => {
       if (!this.dragging) return
-      const dragDistance = 'touches' in e ? e.touches[0].clientX - this.startX : e.clientX - this.startX
-      const x = this.currentX + dragDistance
-      this.dragX = dragDistance
-      this.#xSetter(x)
+
+      const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX
+      const currentY = 'touches' in e ? e.touches[0].clientY : e.clientY
+      const deltaX = currentX - this.startX
+      const deltaY = currentY - this.startY
+
+      // Determine drag direction if not locked
+      if (!this.dragLocked) {
+        const absX = Math.abs(deltaX)
+        const absY = Math.abs(deltaY)
+
+        if (absX > 5 || absY > 5) { // 5px threshold
+          this.isHorizontalDrag = absX > absY
+          this.dragLocked = true
+        }
+      }
+
+      // Only process horizontal drags
+      if (this.isHorizontalDrag) {
+        e.preventDefault() // Prevent scrolling when dragging horizontally
+        const x = this.currentX + deltaX
+        this.dragX = deltaX
+        this.#xSetter(x)
+      }
     }
 
     #onDragEnd = (): void => {
