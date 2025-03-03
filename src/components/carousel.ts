@@ -36,6 +36,7 @@
   const EASE = 's-ease' // default: 'power2.out'
   const LOOP = 's-loop' // default: false
   const SLIDES_TO_SCROLL = 's-slides-to-scroll' // default: 1
+  const DISABLE_SWIPE = 's-disable-swipe' // default: false
 
   // get all carousels
   const carousels = document.querySelectorAll(
@@ -79,6 +80,7 @@
     private isHorizontalDrag: boolean = false
     private dragLocked: boolean = false
     private startY: number = 0
+    private disableSwipe: boolean = false
     // private dragStarted: boolean = false
     // private dragThreshold: number = 10
 
@@ -112,6 +114,7 @@
       this.liveRegion = this.#createLiveRegion()
       this.isPaused = false
       this.slidesToScroll = element.getAttribute(SLIDES_TO_SCROLL) ? parseInt(element.getAttribute(SLIDES_TO_SCROLL) as string) : 1
+      this.disableSwipe = element.getAttribute(DISABLE_SWIPE) ? element.getAttribute(DISABLE_SWIPE) === 'true' : false
 
       this.handleResize = this.handleResize.bind(this)
       this.init()
@@ -176,13 +179,15 @@
     #addEventListeners(): void {
       if (!this.isEnabled) return
 
-      this.root.addEventListener('mousedown', this.#onDragStart)
-      this.root.addEventListener('mouseup', this.#onDragEnd)
-      this.root.addEventListener('mousemove', this.#onDragMove)
-      this.root.addEventListener('touchstart', this.#onDragStart)
-      this.root.addEventListener('touchend', this.#onDragEnd)
-      this.root.addEventListener('touchcancel', this.#onDragEnd)
-      this.root.addEventListener('touchmove', this.#onDragMove)
+      if (!this.disableSwipe) {
+        this.root.addEventListener('mousedown', this.#onDragStart)
+        this.root.addEventListener('mouseup', this.#onDragEnd)
+        this.root.addEventListener('mousemove', this.#onDragMove)
+        this.root.addEventListener('touchstart', this.#onDragStart)
+        this.root.addEventListener('touchend', this.#onDragEnd)
+        this.root.addEventListener('touchcancel', this.#onDragEnd)
+        this.root.addEventListener('touchmove', this.#onDragMove)
+      }
 
       if (this.nextButton) {
         this.nextButton.addEventListener('click', this.goToNext)
@@ -253,6 +258,11 @@
             console.error("Socks UI Carousel: Autoplay is enabled but no pause button found. Add an element with s-carousel=\"pause\" attribute for accessibility.")
           }
         }
+      }
+
+      const disableSwipeAttr = this.wrapper.getAttribute(DISABLE_SWIPE)
+      if (disableSwipeAttr) {
+        this.disableSwipe = disableSwipeAttr === 'true'
       }
     }
 
@@ -513,13 +523,15 @@
     }
 
     public removeEventListeners(): void {
-      this.root.removeEventListener('mousedown', this.#onDragStart)
-      this.root.removeEventListener('mouseup', this.#onDragEnd)
-      this.root.removeEventListener('mousemove', this.#onDragMove)
-      this.root.removeEventListener('touchstart', this.#onDragStart)
-      this.root.removeEventListener('touchend', this.#onDragEnd)
-      this.root.removeEventListener('touchcancel', this.#onDragEnd)
-      this.root.removeEventListener('touchmove', this.#onDragMove)
+      if (!this.disableSwipe) {
+        this.root.removeEventListener('mousedown', this.#onDragStart)
+        this.root.removeEventListener('mouseup', this.#onDragEnd)
+        this.root.removeEventListener('mousemove', this.#onDragMove)
+        this.root.removeEventListener('touchstart', this.#onDragStart)
+        this.root.removeEventListener('touchend', this.#onDragEnd)
+        this.root.removeEventListener('touchcancel', this.#onDragEnd)
+        this.root.removeEventListener('touchmove', this.#onDragMove)
+      }
 
       if (this.nextButton) {
         this.nextButton.removeEventListener('click', this.goToNext)
@@ -536,7 +548,6 @@
           this.pauseButton.removeEventListener('keydown', this.#handleButtonKeydown)
         }
       }
-
 
       // Remove event listeners for dots
       this.dots.forEach((dot, index) => {
