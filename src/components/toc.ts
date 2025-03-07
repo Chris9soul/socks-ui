@@ -141,9 +141,9 @@
     // make it "active"
     ScrollTrigger.create({
       trigger: heading,
-      start: `top+=${offset} 35%`,
+      start: `top-=${offset} 35%`,
       endTrigger: headings[i + 1] ?? content,
-      end: headings[i + 1] ? `top+=${offset} 35%` : 'bottom 50%',
+      end: headings[i + 1] ? `top-=${offset} 35%` : 'bottom 50%',
       onToggle: ({ isActive }) => {
         if (isActive) makeCurrent(cloneLink, level)
       },
