@@ -114,7 +114,7 @@
     const text = heading.textContent
     if (!text) return
 
-    heading.id = 's-' + text.replace(/\s/g, '-').toLowerCase().replace(/[^a-z0-9-]/g, '')
+    heading.id.trim().replace(/\s/g, '-').toLowerCase().replace(/[^a-z0-9-]/g, '')
 
     // Clone the template
     const clone = templateToUse.cloneNode(true) as HTMLElement
@@ -141,9 +141,9 @@
     // make it "active"
     ScrollTrigger.create({
       trigger: heading,
-      start: 'top 35%',
+      start: `top+=${offset} 35%`,
       endTrigger: headings[i + 1] ?? content,
-      end: headings[i + 1] ? 'top 35%' : 'bottom 50%',
+      end: headings[i + 1] ? `top+=${offset} 35%` : 'bottom 50%',
       onToggle: ({ isActive }) => {
         if (isActive) makeCurrent(cloneLink, level)
       },
