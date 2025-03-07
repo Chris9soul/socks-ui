@@ -21,7 +21,8 @@
 
   // Options
   const TOC_CUSTOM_SELECTOR = 's-toc-selector' // Custom selector for the headings
-  const TOC_OFFSET = 's-toc-offset' // the offset from the top of the page
+  const TOC_OFFSET = 's-toc-offset' // the offset from the top of the page - default is 80px
+  const TOC_START = 's-toc-start' // the start of the trigger - default is 35%
   const TOC_ACTIVE = 's-toc-active' // the class to add to the active item
 
   let headingSelector = 'h2' // By default, look for h2 tags
@@ -114,7 +115,7 @@
     const text = heading.textContent
     if (!text) return
 
-    heading.id.trim().replace(/\s/g, '-').toLowerCase().replace(/[^a-z0-9-]/g, '')
+    heading.id = 's-' + text.trim().replace(/\s/g, '-').toLowerCase().replace(/[^a-z0-9-]/g, '')
 
     // Clone the template
     const clone = templateToUse.cloneNode(true) as HTMLElement
@@ -138,12 +139,14 @@
       if (!ul) return
       ul.appendChild(clone)
     }
+
+    const start = list.getAttribute(TOC_START) || '35%'
     // make it "active"
     ScrollTrigger.create({
       trigger: heading,
-      start: `top-=${offset} 35%`,
+      start: `top-=${offset} ${start}`,
       endTrigger: headings[i + 1] ?? content,
-      end: headings[i + 1] ? `top-=${offset} 35%` : 'bottom 50%',
+      end: headings[i + 1] ? `top-=${offset} ${start}` : 'bottom 50%',
       onToggle: ({ isActive }) => {
         if (isActive) makeCurrent(cloneLink, level)
       },
