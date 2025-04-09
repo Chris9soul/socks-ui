@@ -160,9 +160,9 @@
 
     init(): void {
       this.#setupOptions()
-      this.#createDots()
       this.#setUpLoop()
       this.#calculateSlidePositions()
+      this.#createDots()
       this.#updateActiveStates()
       this.#setupPauseButton()
       if (this.autoplayInterval !== null && this.isEnabled) {
