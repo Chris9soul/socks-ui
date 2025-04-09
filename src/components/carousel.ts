@@ -456,10 +456,11 @@
       this.slides.forEach((slide, index) => {
         const isActive = activeSlides.includes(index)
         slide.classList.toggle(this.activeClass, isActive)
-        slide.setAttribute('aria-hidden', (!isActive).toString())
-
-        // toggle inert attribute for non-active slides to make interactive elements not focusable
-        slide.toggleAttribute('inert', !isActive && !this.disableInert)
+        if (!this.disableInert) {
+          slide.setAttribute('aria-hidden', (!isActive).toString())
+          // toggle inert attribute for non-active slides to make interactive elements not focusable
+          slide.toggleAttribute('inert', !isActive)
+        }
       })
 
       this.dots.forEach((dot, index) => {
