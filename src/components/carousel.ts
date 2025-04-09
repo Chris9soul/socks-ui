@@ -37,6 +37,7 @@
   const LOOP = 's-loop' // default: false
   const SLIDES_TO_SCROLL = 's-slides-to-scroll' // default: 1
   const DISABLE_SWIPE = 's-disable-swipe' // default: false
+  const DISABLE_INERT = 's-disable-inert' // default: false
 
   // get all carousels
   const carousels = document.querySelectorAll(
@@ -82,6 +83,7 @@
     private dragLocked: boolean = false
     private startY: number = 0
     private disableSwipe: boolean = false
+    private disableInert: boolean = false
     // private dragStarted: boolean = false
     // private dragThreshold: number = 10
 
@@ -117,6 +119,7 @@
       this.isPaused = false
       this.slidesToScroll = element.getAttribute(SLIDES_TO_SCROLL) ? parseInt(element.getAttribute(SLIDES_TO_SCROLL) as string) : 1
       this.disableSwipe = element.getAttribute(DISABLE_SWIPE) ? element.getAttribute(DISABLE_SWIPE) === 'true' : false
+      this.disableInert = element.getAttribute(DISABLE_INERT) ? element.getAttribute(DISABLE_INERT) === 'true' : false
 
       this.handleResize = this.handleResize.bind(this)
       this.init()
@@ -160,7 +163,7 @@
 
     init(): void {
       this.#setupOptions()
-      this.#setUpLoop()
+      // this.#setUpLoop()
       this.#calculateSlidePositions()
       this.#createDots()
       this.#updateActiveStates()
@@ -295,11 +298,12 @@
       })
     }
 
-    #setUpLoop(): void {
-      if (this.loop) {
+    // TODO: infinite loop feature
+    // #setUpLoop(): void {
+    //   if (this.loop) {
 
-      }
-    }
+    //   }
+    // }
 
     #onDragStart = (e: MouseEvent | TouchEvent): void => {
       //if (e.type === 'touchstart') e.preventDefault()
@@ -453,8 +457,9 @@
         const isActive = activeSlides.includes(index)
         slide.classList.toggle(this.activeClass, isActive)
         slide.setAttribute('aria-hidden', (!isActive).toString())
+
         // toggle inert attribute for non-active slides to make interactive elements not focusable
-        slide.toggleAttribute('inert', !isActive)
+        slide.toggleAttribute('inert', !isActive && !this.disableInert)
       })
 
       this.dots.forEach((dot, index) => {
