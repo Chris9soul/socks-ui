@@ -8,16 +8,19 @@
   <body>
     <h1>Carousel</h1>
 
-    <div s-carousel="wrapper">
+    <div s-carousel="wrapper" s-loop="true">
       <div s-carousel="root">
         <div s-carousel="slide">Slide 1</div>
         <div s-carousel="slide">Slide 2</div>
+        <div s-carousel="slide">Slide 3</div>
       </div>
-    </div>
-
-    <div>
-      <button class="nav-button">Next</button>
-      <button class="nav-button">Prev</button>
+      <div>
+        <button s-carousel="prev" class="nav-button">Prev</button>
+        <button s-carousel="next" class="nav-button">Next</button>
+        <div class="carousel-dots">
+          <div s-carousel="dot"></div>
+        </div>
+      </div>
     </div>
 
     <style>
@@ -35,8 +38,22 @@
         justify-content: center;
         align-items: center;
       }
+      [s-carousel='dot'] {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: black;
+        margin: 0 5px;
+        cursor: pointer;
+      }
+      .carousel-dots {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+      }
     </style>
 
-    <script src="components/carousel.ts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="./components/carousel.ts"></script>
   </body>
 </html>

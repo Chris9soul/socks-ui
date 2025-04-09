@@ -56,7 +56,8 @@
     autoplayInterval: number | null
     autoplayTimeoutId: number | null
     currentIndex: number
-    dragging: boolean
+    isDragging: boolean
+    isAnimating: boolean
     startX: number
     currentX: number
     dragX: number
@@ -93,7 +94,8 @@
       this.pauseButton = element.querySelector(`[${CAROUSEL_PAUSE}]`)
       this.dots = []
       this.currentIndex = 0
-      this.dragging = false
+      this.isDragging = false
+      this.isAnimating = false
       this.startX = 0
       this.currentX = 0
       this.dragX = 0
@@ -158,8 +160,9 @@
 
     init(): void {
       this.#setupOptions()
-      this.#calculateSlidePositions()
       this.#createDots()
+      this.#setUpLoop()
+      this.#calculateSlidePositions()
       this.#updateActiveStates()
       this.#setupPauseButton()
       if (this.autoplayInterval !== null && this.isEnabled) {
@@ -292,9 +295,15 @@
       })
     }
 
+    #setUpLoop(): void {
+      if (this.loop) {
+
+      }
+    }
+
     #onDragStart = (e: MouseEvent | TouchEvent): void => {
       //if (e.type === 'touchstart') e.preventDefault()
-      this.dragging = true
+      this.isDragging = true
       this.startX = 'touches' in e ? e.touches[0].clientX : e.clientX
       this.startY = 'touches' in e ? e.touches[0].clientY : e.clientY
       this.currentX = gsap.getProperty(this.root, 'x') as number
@@ -314,7 +323,7 @@
     }
 
     #onDragMove = (e: MouseEvent | TouchEvent): void => {
-      if (!this.dragging) return
+      if (!this.isDragging) return
 
       const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX
       const currentY = 'touches' in e ? e.touches[0].clientY : e.clientY
@@ -342,8 +351,8 @@
     }
 
     #onDragEnd = (): void => {
-      if (!this.dragging) return
-      this.dragging = false
+      if (!this.isDragging) return
+      this.isDragging = false
       this.wrapper.classList.remove(this.draggingClass)
 
       // Calculate the number of slides dragged
@@ -444,6 +453,8 @@
         const isActive = activeSlides.includes(index)
         slide.classList.toggle(this.activeClass, isActive)
         slide.setAttribute('aria-hidden', (!isActive).toString())
+        // toggle inert attribute for non-active slides to make interactive elements not focusable
+        slide.toggleAttribute('inert', !isActive)
       })
 
       this.dots.forEach((dot, index) => {
