@@ -1,5 +1,7 @@
 # Socks UI for Webflow
 
+[![](https://data.jsdelivr.com/v1/package/npm/socks-ui/badge)](https://www.jsdelivr.com/package/npm/socks-ui)
+
 Create your own components powered by GSAP by just adding attributes.
 Accessible, customizable, open-source.
 
